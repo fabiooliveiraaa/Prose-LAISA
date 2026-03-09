@@ -550,6 +550,74 @@
   .protocol-label { color: var(--muted); }
   .protocol-num { color: var(--accent); font-weight: 500; }
 
+  /* COUNTDOWN */
+  .countdown-wrap {
+    margin: 20px 0 28px;
+  }
+  .countdown-label {
+    font-size: 12px; color: var(--muted); margin-bottom: 12px;
+    font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 1px;
+  }
+  .countdown-tiles {
+    display: flex; justify-content: center; gap: 12px; flex-wrap: wrap;
+  }
+  .countdown-tile {
+    background: var(--surface2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 16px; min-width: 68px;
+  }
+  .countdown-num {
+    font-family: 'JetBrains Mono', monospace; font-size: 28px; font-weight: 700;
+    color: var(--accent2); line-height: 1; display: block;
+  }
+  .countdown-unit {
+    font-size: 10px; color: var(--muted); text-transform: uppercase;
+    letter-spacing: 1px; display: block; margin-top: 4px;
+  }
+  .countdown-ended {
+    font-size: 14px; color: var(--success); font-weight: 600;
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  /* STATUS LOOKUP */
+  .status-lookup {
+    margin-top: 32px; padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .status-lookup-title {
+    font-size: 13px; color: var(--muted); margin-bottom: 14px;
+  }
+  .status-lookup-row {
+    display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+  }
+  .status-lookup-row input {
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 10px; padding: 10px 14px; color: var(--text);
+    font-family: 'JetBrains Mono', monospace; font-size: 13px;
+    outline: none; width: 220px;
+  }
+  .status-lookup-row input:focus { border-color: var(--accent); }
+  .status-lookup-row input::placeholder { color: rgba(122,168,130,0.4); }
+  .status-lookup-btn {
+    padding: 10px 20px; background: rgba(74,160,85,0.12);
+    border: 1.5px solid var(--border); border-radius: 10px;
+    color: var(--accent2); font-size: 13px; font-weight: 600;
+    cursor: pointer; font-family: 'DM Sans', sans-serif;
+    transition: all 0.2s;
+  }
+  .status-lookup-btn:hover { background: rgba(74,160,85,0.22); border-color: var(--accent); }
+
+  .status-result {
+    margin-top: 14px; padding: 14px 18px;
+    border-radius: 12px; font-size: 14px;
+    display: none; text-align: left;
+  }
+  .status-result.visible { display: block; }
+  .status-result.pendente  { background: rgba(255,201,77,0.08); border: 1px solid rgba(255,201,77,0.25); }
+  .status-result.aprovado  { background: rgba(93,201,106,0.08); border: 1px solid rgba(93,201,106,0.25); }
+  .status-result.reprovado { background: rgba(255,107,107,0.08); border: 1px solid rgba(255,107,107,0.25); }
+  .status-result.fase2     { background: rgba(125,204,106,0.10); border: 1px solid rgba(125,204,106,0.3); }
+  .status-result.notfound  { background: rgba(255,107,107,0.06); border: 1px solid rgba(255,107,107,0.2); }
+
   /* FOOTER */
   footer {
     position: relative; z-index: 1;
@@ -861,15 +929,84 @@
   <div class="form-panel success-screen" id="successScreen">
     <div class="success-icon">✓</div>
     <h2 class="success-title">Inscrição enviada!</h2>
-    <p class="success-desc">Sua inscrição para o PROSEL LAISA 2025 foi recebida com sucesso.<br>Você receberá um e-mail de confirmação em breve.</p>
-    <div class="protocol-box">
-      <span class="protocol-label">Protocolo:</span>
-      <span class="protocol-num" id="protocolNum">#LAISA-2025-0000</span>
+    <p class="success-desc">Sua inscrição para o PROSEL LAISA 2026 foi recebida com sucesso.</p>
+
+    <!-- AVISO DE PROTOCOLO -->
+    <div style="background:rgba(255,201,77,0.08);border:1.5px solid rgba(255,201,77,0.3);border-radius:14px;padding:16px 20px;margin-bottom:20px;text-align:left;max-width:480px;margin-left:auto;margin-right:auto;">
+      <div style="display:flex;align-items:flex-start;gap:12px;">
+        <span style="font-size:22px;flex-shrink:0;">⚠️</span>
+        <div>
+          <div style="font-size:13px;font-weight:700;color:#ffc94d;margin-bottom:4px;">Salve seu número de protocolo!</div>
+          <div style="font-size:13px;color:var(--muted);line-height:1.6;">Você precisará dele para <strong style="color:var(--text)">acompanhar o status da sua inscrição</strong> na página inicial. Anote ou copie agora.</div>
+        </div>
+      </div>
     </div>
-    <br>
-    <p style="color:var(--muted);font-size:13px">Resultado em até <strong style="color:var(--text)">30 dias</strong> após o prazo final.</p>
+
+    <div class="protocol-box" style="cursor:pointer;" onclick="copyProtocol()" title="Clique para copiar">
+      <span class="protocol-label">Protocolo:</span>
+      <span class="protocol-num" id="protocolNum">#LAISA-2026-0000</span>
+      <span id="copyIcon" style="font-size:14px;color:var(--muted);margin-left:4px;">📋</span>
+    </div>
+    <div id="copyFeedback" style="font-size:12px;color:var(--success);margin-top:-20px;margin-bottom:20px;display:none;">✓ Protocolo copiado!</div>
+
+    <!-- COUNTDOWN -->
+    <div class="countdown-wrap">
+      <div class="countdown-label">⏳ Resultado em</div>
+      <div class="countdown-tiles" id="countdown">
+        <div class="countdown-tile"><span class="countdown-num" id="cd-dias">--</span><span class="countdown-unit">dias</span></div>
+        <div class="countdown-tile"><span class="countdown-num" id="cd-horas">--</span><span class="countdown-unit">horas</span></div>
+        <div class="countdown-tile"><span class="countdown-num" id="cd-min">--</span><span class="countdown-unit">min</span></div>
+        <div class="countdown-tile"><span class="countdown-num" id="cd-seg">--</span><span class="countdown-unit">seg</span></div>
+      </div>
+    </div>
+
+    <!-- STATUS LOOKUP -->
+    <div class="status-lookup">
+      <div class="status-lookup-title">🔍 Acompanhe sua inscrição pelo protocolo</div>
+      <div class="status-lookup-row">
+        <input type="text" id="lookupInput" placeholder="#LAISA-2026-0000" oninput="this.value=this.value.toUpperCase()">
+        <button class="status-lookup-btn" onclick="lookupStatus()">Consultar</button>
+      </div>
+      <div class="status-result" id="statusResult"></div>
+    </div>
+
     <br><br>
     <a href="#" class="btn btn-ghost" onclick="resetForm()">← Nova inscrição</a>
+  </div>
+</div>
+
+<!-- CONSULTA DE STATUS — PÁGINA INICIAL -->
+<div style="position:relative;z-index:1;max-width:720px;margin:40px auto 0;animation:fadeUp 0.8s 0.4s ease both;">
+  <div style="background:var(--surface);border:1px solid var(--border);border-radius:20px;overflow:hidden;">
+    <div style="padding:24px 36px 20px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:14px;">
+      <div style="width:40px;height:40px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:12px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;">🔍</div>
+      <div>
+        <div style="font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--accent2);text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Já se inscreveu?</div>
+        <div style="font-size:17px;font-weight:600;">Acompanhe sua inscrição</div>
+        <div style="font-size:13px;color:var(--muted);margin-top:2px;">Digite seu número de protocolo para consultar o status</div>
+      </div>
+    </div>
+    <div style="padding:28px 36px;">
+      <div style="display:flex;gap:10px;flex-wrap:wrap;">
+        <input
+          type="text"
+          id="lookupInputHome"
+          placeholder="#LAISA-2026-0000"
+          oninput="this.value=this.value.toUpperCase()"
+          onkeydown="if(event.key==='Enter')lookupStatusHome()"
+          style="flex:1;min-width:200px;padding:12px 16px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:14px;outline:none;transition:border-color 0.2s;"
+          onfocus="this.style.borderColor='var(--accent)'"
+          onblur="this.style.borderColor='rgba(74,160,85,0.2)'"
+        >
+        <button
+          onclick="lookupStatusHome()"
+          style="padding:12px 24px;background:linear-gradient(135deg,var(--accent),#2d7a38);border:none;border-radius:10px;color:#fff;font-size:14px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;box-shadow:0 4px 20px rgba(74,160,85,0.25);transition:all 0.2s;white-space:nowrap;"
+          onmouseover="this.style.transform='translateY(-1px)'"
+          onmouseout="this.style.transform='translateY(0)'"
+        >Consultar status</button>
+      </div>
+      <div id="statusResultHome" style="margin-top:14px;display:none;"></div>
+    </div>
   </div>
 </div>
 
@@ -1137,10 +1274,156 @@
     `;
   }
 
+  function copyProtocol() {
+    const proto = document.getElementById('protocolNum').textContent;
+    navigator.clipboard.writeText(proto).then(() => {
+      document.getElementById('copyIcon').textContent = '✅';
+      const fb = document.getElementById('copyFeedback');
+      fb.style.display = 'block';
+      setTimeout(() => {
+        fb.style.display = 'none';
+        document.getElementById('copyIcon').textContent = '📋';
+      }, 2500);
+    });
+  }
+
   // Char counter
   document.getElementById('motivacao').addEventListener('input', function() {
     document.getElementById('charCount').textContent = this.value.length + ' / 3000 caracteres';
   });
+
+  // ── COUNTDOWN até 15/03/2026 23:59:59 ──────────────────
+  const RESULT_DATE = new Date('2026-03-15T23:59:59-03:00');
+
+  function updateCountdown() {
+    const now  = new Date();
+    const diff = RESULT_DATE - now;
+    if (diff <= 0) {
+      document.getElementById('countdown').innerHTML =
+        '<span class="countdown-ended">🎉 Resultado disponível!</span>';
+      return;
+    }
+    const dias  = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const horas = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const min   = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+    const seg   = Math.floor((diff % (1000 * 60)) / 1000);
+    document.getElementById('cd-dias').textContent  = String(dias).padStart(2,'0');
+    document.getElementById('cd-horas').textContent = String(horas).padStart(2,'0');
+    document.getElementById('cd-min').textContent   = String(min).padStart(2,'0');
+    document.getElementById('cd-seg').textContent   = String(seg).padStart(2,'0');
+  }
+  updateCountdown();
+  setInterval(updateCountdown, 1000);
+
+  // ── CONSULTA DE STATUS POR PROTOCOLO ────────────────────
+  async function lookupStatus() {
+    const raw = document.getElementById('lookupInput').value.trim();
+    const result = document.getElementById('statusResult');
+
+    // Extrai o número do protocolo: aceita "#LAISA-2026-0042" ou só "42" ou "0042"
+    const match = raw.match(/(\d+)$/);
+    if (!match) {
+      result.className = 'status-result notfound visible';
+      result.innerHTML = '❌ Protocolo inválido. Digite no formato <strong>#LAISA-2026-0000</strong>';
+      return;
+    }
+    const id = parseInt(match[1], 10);
+
+    result.className = 'status-result visible pendente';
+    result.innerHTML = '⏳ Consultando...';
+
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/inscricoes?id=eq.${id}&select=nome,status`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+
+      if (!data.length) {
+        result.className = 'status-result notfound visible';
+        result.innerHTML = '❌ Protocolo não encontrado. Verifique o número e tente novamente.';
+        return;
+      }
+
+      const { nome, status } = data[0];
+      const msgs = {
+        pendente:  { icon: '⏳', texto: 'sua inscrição está <strong>em análise</strong>. Em breve você saberá o resultado.',   cls: 'pendente'  },
+        aprovado:  { icon: '✅', texto: 'você foi <strong>aprovado(a) para a Fase 1</strong>! Aguarde o contato do LAISA.',      cls: 'aprovado'  },
+        fase2:     { icon: '🚀', texto: 'parabéns! Você avançou para a <strong>Fase 2</strong>. Verifique seu e-mail.',          cls: 'fase2'     },
+        reprovado: { icon: '❌', texto: 'infelizmente você <strong>não foi selecionado(a)</strong> neste processo. Obrigado pela participação!', cls: 'reprovado' },
+      };
+      const m = msgs[status] || msgs.pendente;
+      result.className = `status-result ${m.cls} visible`;
+      result.innerHTML = `${m.icon} <strong>${nome.split(' ')[0]}</strong>, ${m.texto}`;
+    } catch(e) {
+      result.className = 'status-result notfound visible';
+      result.innerHTML = '❌ Erro ao consultar. Verifique sua conexão e tente novamente.';
+    }
+  }
+
+  // permitir Enter no campo de consulta
+  document.addEventListener('DOMContentLoaded', () => {
+    const inp = document.getElementById('lookupInput');
+    if (inp) inp.addEventListener('keydown', e => { if (e.key === 'Enter') lookupStatus(); });
+  });
+
+  // ── CONSULTA NA PÁGINA INICIAL ───────────────────────────
+  async function lookupStatusHome() {
+    const raw = document.getElementById('lookupInputHome').value.trim();
+    const resultEl = document.getElementById('statusResultHome');
+
+    const match = raw.match(/(\d+)$/);
+    if (!match) {
+      resultEl.style.display = 'block';
+      resultEl.className = 'status-result notfound visible';
+      resultEl.innerHTML = '❌ Protocolo inválido. Digite no formato <strong>#LAISA-2026-0000</strong>';
+      styleResult(resultEl, 'notfound');
+      return;
+    }
+    const id = parseInt(match[1], 10);
+    resultEl.style.display = 'block';
+    styleResult(resultEl, 'pendente');
+    resultEl.innerHTML = '⏳ Consultando...';
+
+    try {
+      const res = await fetch(
+        `${SUPABASE_URL}/rest/v1/inscricoes?id=eq.${id}&select=nome,status`,
+        { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+      );
+      const data = await res.json();
+
+      if (!data.length) {
+        styleResult(resultEl, 'notfound');
+        resultEl.innerHTML = '❌ Protocolo não encontrado. Verifique o número e tente novamente.';
+        return;
+      }
+
+      const { nome, status } = data[0];
+      const msgs = {
+        pendente:  { icon: '⏳', texto: 'sua inscrição está <strong>em análise</strong>. Em breve você saberá o resultado.' },
+        aprovado:  { icon: '✅', texto: 'você foi <strong>aprovado(a) para a Fase 1</strong>! Aguarde o contato do LAISA.' },
+        fase2:     { icon: '🚀', texto: 'parabéns! Você avançou para a <strong>Fase 2</strong>. Verifique seu e-mail.' },
+        reprovado: { icon: '❌', texto: 'infelizmente você <strong>não foi selecionado(a)</strong> neste processo. Obrigado pela participação!' },
+      };
+      const m = msgs[status] || msgs.pendente;
+      styleResult(resultEl, status);
+      resultEl.innerHTML = `${m.icon} <strong>${nome.split(' ')[0]}</strong>, ${m.texto}`;
+    } catch(e) {
+      styleResult(resultEl, 'notfound');
+      resultEl.innerHTML = '❌ Erro ao consultar. Verifique sua conexão e tente novamente.';
+    }
+  }
+
+  function styleResult(el, status) {
+    const styles = {
+      pendente:  'background:rgba(255,201,77,0.08);border:1px solid rgba(255,201,77,0.25);',
+      aprovado:  'background:rgba(93,201,106,0.08);border:1px solid rgba(93,201,106,0.25);',
+      reprovado: 'background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);',
+      fase2:     'background:rgba(125,204,106,0.10);border:1px solid rgba(125,204,106,0.3);',
+      notfound:  'background:rgba(255,107,107,0.06);border:1px solid rgba(255,107,107,0.2);',
+    };
+    el.style.cssText = `margin-top:14px;padding:14px 18px;border-radius:12px;font-size:14px;line-height:1.6;${styles[status]||styles.pendente}`;
+  }
 
   // Init
   document.getElementById('acceptRow').classList.add('checked');
