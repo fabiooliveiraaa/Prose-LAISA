@@ -508,14 +508,14 @@ async function saveNotes(){
 }
 
 function exportCSV(){
-  const cols=['id','nome','email','curso','periodo','disponibilidade','votos_aprovar','votos_reprovar','resultado'];
+  const cols=['id','nome','email','telefone','curso','periodo','disponibilidade','votos_aprovar','votos_reprovar','resultado'];
   const header=cols.join(';');
   const rows=allData.map(r=>{
     const vs=allVotos[r.id]||[];
     const nA=vs.filter(v=>v.voto==='aprovar').length;
     const nR=vs.filter(v=>v.voto==='reprovar').length;
     const res=getMaioriaResult(r.id);
-    return[r.id,r.nome,r.email,r.curso,r.periodo,r.disponibilidade,nA,nR,res].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(';');
+    return[r.id,r.nome,r.email,r.telefone,r.curso,r.periodo,r.disponibilidade,nA,nR,res].map(v=>`"${(v||'').toString().replace(/"/g,'""')}"`).join(';');
   });
   const csv=[header,...rows].join('\n');
   const blob=new Blob(['\uFEFF'+csv],{type:'text/csv;charset=utf-8;'});
