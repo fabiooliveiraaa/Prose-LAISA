@@ -170,9 +170,33 @@ footer a{color:var(--accent);text-decoration:none}
       <input type="text" class="field-input" id="loginProto" placeholder="#LAISA-2026-0000" oninput="this.value=this.value.toUpperCase()" onkeydown="if(event.key==='Enter')doLoginFase2()">
       <button class="btn-primary" id="loginBtn" onclick="doLoginFase2()">Acessar Fase 2 →</button>
       <div class="login-error" id="loginError">E-mail ou protocolo incorreto, ou você ainda não foi aprovado para a Fase 2.</div>
-      <div class="login-notice">
+
+      <!-- RECUPERAR PROTOCOLO -->
+      <div style="margin-top:16px;border-top:1px solid var(--border);padding-top:16px;">
+        <button onclick="toggleRecuperar()"
+          style="background:none;border:none;color:var(--muted);font-size:13px;cursor:pointer;font-family:'DM Sans',sans-serif;padding:0;display:flex;align-items:center;gap:6px;">
+          <span id="recuperarArrow">▶</span> Esqueci meu protocolo
+        </button>
+        <div id="recuperarBox" style="display:none;margin-top:14px;">
+          <label class="field-label">Digite seu e-mail para recuperar</label>
+          <div style="display:flex;gap:8px;">
+            <input type="email" id="recuperarEmailF2" placeholder="seu@email.com"
+              onkeydown="if(event.key==='Enter')recuperarF2()"
+              style="flex:1;padding:11px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;"
+              onfocus="this.style.borderColor='var(--accent)'"
+              onblur="this.style.borderColor='rgba(74,160,85,0.2)'">
+            <button onclick="recuperarF2()"
+              style="padding:11px 16px;background:rgba(74,160,85,0.15);border:1.5px solid var(--border);border-radius:10px;color:var(--accent2);font-size:13px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
+              Buscar
+            </button>
+          </div>
+          <div id="recuperarResultF2" style="margin-top:10px;display:none;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;"></div>
+        </div>
+      </div>
+
+      <div class="login-notice" style="margin-top:14px;">
         <strong>Somente candidatos aprovados</strong> na Fase 1 conseguem acessar esta página.<br>
-        Seu protocolo está na tela de confirmação da inscrição ou pode ser consultado na <a href="index.html" style="color:var(--accent2)">página inicial</a>.
+        Seu protocolo também pode ser consultado na <a href="index.html" style="color:var(--accent2)">página inicial</a>.
       </div>
     </div>
   </div>
@@ -333,6 +357,73 @@ let candidato = null;
 let selectedSeg = null;
 let selectedFile = null;
 
+// ── RECUPERAR PROTOCOLO (FASE 2) ───────────────────
+function toggleRecuperar() {
+  const box = document.getElementById('recuperarBox');
+  const arrow = document.getElementById('recuperarArrow');
+  const open = box.style.display === 'none';
+  box.style.display = open ? 'block' : 'none';
+  arrow.textContent = open ? '▼' : '▶';
+}
+
+async function recuperarF2() {
+  const email = document.getElementById('recuperarEmailF2').value.trim().toLowerCase();
+  const resultEl = document.getElementById('recuperarResultF2');
+  resultEl.style.display = 'block';
+
+  if (!email || !email.includes('@')) {
+    resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);color:var(--error)';
+    resultEl.innerHTML = '❌ Digite um e-mail válido.';
+    return;
+  }
+
+  resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(255,201,77,0.08);border:1px solid rgba(255,201,77,0.25);color:var(--warn)';
+  resultEl.innerHTML = '⏳ Buscando...';
+
+  try {
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/inscricoes?email=ilike.${encodeURIComponent(email)}&select=id,nome,status`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+
+    if (!data.length) {
+      resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);color:var(--error)';
+      resultEl.innerHTML = '❌ Nenhuma inscrição encontrada com este e-mail.';
+      return;
+    }
+
+    const { id, nome, status } = data[0];
+    const proto = `#LAISA-2026-${String(id).padStart(4,'0')}`;
+
+    if (status !== 'aprovado' && status !== 'fase2') {
+      resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);';
+      resultEl.innerHTML = `❌ <strong>${nome.split(' ')[0]}</strong>, sua inscrição ainda não foi aprovada para a Fase 2.`;
+      return;
+    }
+
+    resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(93,201,106,0.08);border:1px solid rgba(93,201,106,0.25);color:var(--text)';
+    resultEl.innerHTML = `✅ <strong>${nome.split(' ')[0]}</strong>, encontramos sua inscrição!<br>
+      <div style="margin-top:8px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+        <span onclick="navigator.clipboard.writeText('${proto}');this.textContent='✅ Copiado!';setTimeout(()=>this.textContent='${proto}',2000)"
+          style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-family:'JetBrains Mono',monospace;font-size:14px;font-weight:700;color:var(--accent2);cursor:pointer;">
+          ${proto}
+        </span>
+        <span style="font-size:12px;color:var(--muted)">Clique para copiar<br>e cole no campo acima</span>
+      </div>`;
+
+    // preenche o campo protocolo automaticamente
+    setTimeout(() => {
+      document.getElementById('loginProto').value = proto;
+      document.getElementById('loginEmail').value = email;
+    }, 300);
+
+  } catch(e) {
+    resultEl.style.cssText = 'display:block;padding:12px 14px;border-radius:10px;font-size:13px;line-height:1.6;background:rgba(255,107,107,0.08);border:1px solid rgba(255,107,107,0.25);color:var(--error)';
+    resultEl.innerHTML = '❌ Erro ao buscar. Verifique sua conexão.';
+  }
+}
+
 // ── LOGIN ──────────────────────────────────────────
 async function doLoginFase2() {
   const emailRaw = document.getElementById('loginEmail').value.trim().toLowerCase();
@@ -352,22 +443,56 @@ async function doLoginFase2() {
   err.style.display = 'none';
 
   try {
-    const res = await fetch(
-      `${SUPABASE_URL}/rest/v1/inscricoes?id=eq.${id}&email=eq.${encodeURIComponent(emailRaw)}&select=id,nome,email,status`,
-      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
-    );
-    const data = await res.json();
+    // Extrai o ID do protocolo
+    const match = protoRaw.match(/(\d+)$/);
+    const idFromProto = match ? parseInt(match[1], 10) : -1;
 
-    if (!data.length || (data[0].status !== 'aprovado' && data[0].status !== 'fase2')) {
+    if (idFromProto < 0) {
       err.style.display = 'block';
-      err.textContent = !data.length
-        ? 'E-mail ou protocolo incorreto.'
-        : 'Você ainda não foi aprovado(a) para a Fase 2.';
+      err.textContent = 'Formato de protocolo inválido. Use o formato #LAISA-2026-0000.';
       btn.innerHTML = 'Acessar Fase 2 →'; btn.disabled = false;
       return;
     }
 
-    candidato = { ...data[0], proto: protoRaw };
+    // Busca diretamente pelo ID do protocolo (mais confiável)
+    const res = await fetch(
+      `${SUPABASE_URL}/rest/v1/inscricoes?id=eq.${idFromProto}&select=id,nome,email,status`,
+      { headers: { apikey: SUPABASE_KEY, Authorization: `Bearer ${SUPABASE_KEY}` } }
+    );
+    const data = await res.json();
+
+    if (!data.length) {
+      err.style.display = 'block';
+      err.textContent = 'Protocolo não encontrado. Verifique o número e tente novamente.';
+      btn.innerHTML = 'Acessar Fase 2 →'; btn.disabled = false;
+      return;
+    }
+
+    const found = data[0];
+
+    // Valida o e-mail localmente (ignora maiúsculas/minúsculas e espaços)
+    const emailBanco = (found.email || '').trim().toLowerCase();
+    if (emailBanco !== emailRaw) {
+      err.style.display = 'block';
+      err.textContent = 'E-mail incorreto para este protocolo. Verifique o e-mail usado na inscrição.';
+      btn.innerHTML = 'Acessar Fase 2 →'; btn.disabled = false;
+      return;
+    }
+
+    if (found.status !== 'aprovado' && found.status !== 'fase2') {
+      err.style.display = 'block';
+      if (found.status === 'pendente') {
+        err.textContent = 'Sua inscrição ainda está em análise. O resultado será divulgado em breve.';
+      } else if (found.status === 'reprovado') {
+        err.textContent = 'Infelizmente você não foi selecionado(a) para a Fase 2.';
+      } else {
+        err.textContent = 'Você ainda não foi aprovado(a) para a Fase 2.';
+      }
+      btn.innerHTML = 'Acessar Fase 2 →'; btn.disabled = false;
+      return;
+    }
+
+    candidato = { ...found, proto: protoRaw };
     document.getElementById('portalNome').textContent  = candidato.nome.split(' ')[0];
     document.getElementById('portalProto').textContent = protoRaw;
     document.getElementById('portalEmail').textContent = candidato.email;
