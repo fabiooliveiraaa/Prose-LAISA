@@ -831,37 +831,12 @@ async function loadFase2() {
 
 async function downloadPDF(filePath, fileName) {
   try {
-    showToast('⏳ Gerando link de download...', 'info');
-
-    // gera URL assinada com validade de 300 segundos (5 min)
-    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/fase2-projetos/${filePath}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'apikey': SUPABASE_KEY,
-        'Authorization': 'Bearer ' + SUPABASE_KEY
-      },
-      body: JSON.stringify({ expiresIn: 300 })
-    });
-
-    const json = await res.json();
-    if (!res.ok) throw new Error(JSON.stringify(json));
-
-    // signedURL já vem como caminho relativo: /storage/v1/object/sign/...
-    // basta concatenar com a base do Supabase sem duplicar
-    const signedURL = json.signedURL || json.signedUrl;
-    if (!signedURL) throw new Error('URL assinada não retornada: ' + JSON.stringify(json));
-
-    // monta a URL final corretamente
-    const finalURL = signedURL.startsWith('http')
-      ? signedURL
-      : `${SUPABASE_URL}${signedURL}`;
-
-    window.open(finalURL, '_blank');
+    // Com bucket público, a URL é direta — sem necessidade de assinatura
+    const publicURL = `${SUPABASE_URL}/storage/v1/object/public/fase2-projetos/${filePath}`;
+    window.open(publicURL, '_blank');
     showToast('✅ PDF aberto!', 'success');
   } catch(e) {
-    console.error('downloadPDF error:', e);
-    showToast('❌ Erro: ' + e.message, 'error');
+    showToast('❌ Erro ao abrir PDF: ' + e.message, 'error');
   }
 }
 
