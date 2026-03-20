@@ -666,14 +666,15 @@ function setView(v) {
 
 // ── FASE 2: NOTAS ─────────────────────────────────
 let f2Data = [];       // entregas
-let f2Notas = {};      // { entrega_id: [{ avaliador, nota }] }
-let f2MinhaNotas = {}; // { entrega_id: nota }
+let f2Notas = {};
+let f2MinhaNotas = {};
+let f2Data = [];
 
 async function loadFase2() {
   document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--muted);"><div class="spinner"></div> Carregando...</td></tr>';
   try {
     const [entregas, notas] = await Promise.all([
-      fetch(SUPABASE_URL + '/rest/v1/entregas_fase2?select=*,inscricoes(nome,email,curso)&order=created_at.desc',
+      fetch(SUPABASE_URL + '/rest/v1/entregas_fase2?select=*,inscricoes(nome,email,curso)&order=created_at.asc',
         { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r=>r.json()),
       fetch(SUPABASE_URL + '/rest/v1/notas_fase2?select=*',
         { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r=>r.json()).catch(()=>[])
@@ -687,7 +688,7 @@ async function loadFase2() {
       if (n.avaliador === currentAvaliador) f2MinhaNotas[n.entrega_id] = n.nota;
     });
 
-    const segLabels = { hardware:'⚙️ Hardware', software:'💻 Software', manufatura:'🖨️ 3D', ia:'🤖 IA' };
+    const segLabels = { hardware:'Hardware', software:'Software', manufatura:'3D', ia:'IA' };
     document.getElementById('f2Total').textContent    = entregas.length;
     document.getElementById('f2Hardware').textContent = entregas.filter(d=>d.segmento==='hardware').length;
     document.getElementById('f2Software').textContent = entregas.filter(d=>d.segmento==='software').length;
@@ -696,148 +697,102 @@ async function loadFase2() {
 
     if (!entregas.length) {
       document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--muted);">Nenhuma entrega recebida ainda.</td></tr>';
+      document.getElementById('f2Avaliados').textContent = '0/0';
       return;
     }
 
-    // calcula médias e ordena para ranking
     const comMedia = entregas.map(d => {
       const ns = f2Notas[d.id] || [];
-      const media = ns.length ? (ns.reduce((s,n)=>s+parseFloat(n.nota),0)/ns.length).toFixed(1) : null;
+      const media = ns.length ? parseFloat((ns.reduce((s,n)=>s+parseFloat(n.nota),0)/ns.length).toFixed(1)) : null;
       return { ...d, media, totalNotas: ns.length };
-    }).sort((a,b) => (b.media||0) - (a.media||0));
-
-    document.getElementById('f2TableBody').innerHTML = comMedia.map((d, idx) => {
-      const nome  = d.inscricoes?.nome || '—';
-      const email = d.inscricoes?.email || d.email;
-      const seg   = segLabels[d.segmento] || d.segmento;
-      const fname = d.arquivo_nome || 'arquivo.pdf';
-      const filePathMatch = (d.arquivo_url||'').match(/fase2-projetos\/(.+)$/);
-      const filePath = filePathMatch ? filePathMatch[1] : null;
-      const minhaNota = f2MinhaNotas[d.id];
-      const rank = idx + 1;
-      const isTop5 = d.media !== null && rank <= 5;
-      const rankBadge = isTop5
-        ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:${rank===1?'#ffd700':rank===2?'#c0c0c0':rank===3?'#cd7f32':'var(--accent)'};border-radius:50%;font-size:11px;font-weight:800;color:#0b1a0f;margin-right:6px;">${rank}</span>`
-        : `<span style="font-size:11px;color:var(--muted);margin-right:6px;">#${rank}</span>`;
-
-      return `<tr style="border-bottom:1px solid rgba(74,160,85,0.07);${isTop5?'background:rgba(74,160,85,0.04);':''}">
-        <td style="padding:12px;font-size:13px;">${rankBadge}<strong>${esc(nome)}</strong><div style="font-size:11px;color:var(--muted);margin-left:30px;">${esc(email)}</div></td>
-        <td style="padding:12px;font-size:13px;"><span style="padding:3px 8px;background:rgba(74,160,85,0.1);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;">${seg}</span></td>
-        <td style="padding:12px;text-align:center;">
-          ${d.media !== null
-            ? `<span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:${isTop5?'var(--accent2)':'var(--text)'};">${d.media}</span><span style="font-size:10px;color:var(--muted);display:block;">${d.totalNotas}/${TOTAL_AVALIADORES} avaliador(es)</span>`
-            : `<span style="font-size:12px;color:var(--muted);">sem nota</span>`}
-        </td>
-        <td style="padding:12px;text-align:center;">
-          <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
-            <input type="number" min="0" max="10" step="0.1"
-              id="nota_${d.id}"
-              value="${minhaNota !== undefined ? minhaNota : ''}"
-              placeholder="0–10"
-              style="width:64px;padding:6px 8px;background:var(--surface2);border:1.5px solid ${minhaNota!==undefined?'var(--accent)':'var(--border)'};border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;outline:none;text-align:center;">
-            <button onclick="salvarNota(${d.id})"
-              style="padding:6px 12px;background:rgba(74,160,85,0.12);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
-              ${minhaNota !== undefined ? '✏️ Editar' : '✅ Salvar'}
-            </button>
-          </div>
-        </td>
-        <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${fmtDate(d.created_at)}</td>
-        <td style="padding:12px;">
-          ${filePath
-            ? `<button onclick="downloadPDF('${filePath}','${esc(fname)}')" style="padding:5px 10px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ PDF</button>`
-            : `<span style="font-size:11px;color:var(--error)">indisponível</span>`}
-        </td>
-      </tr>`;
-    }).join('');
-
-    // atualiza stat dos avaliados
-    const avaliados = comMedia.filter(d => d.media !== null).length;
-    document.getElementById('f2Avaliados').textContent = avaliados + '/' + entregas.length;
-
-  } catch(e) {
-    document.getElementById('f2TableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--error);">❌ Erro: ${e.message}</td></tr>`;
-  }
-}
-
-async function salvarNota(entregaId) {
-  const input = document.getElementById('nota_' + entregaId);
-  const nota = parseFloat(input.value);
-  if (isNaN(nota) || nota < 0 || nota > 10) {
-    showToast('⚠️ Nota deve ser entre 0 e 10', 'error'); return;
-  }
-  try {
-    await fetch(SUPABASE_URL + '/rest/v1/notas_fase2', {
-      method: 'POST',
-      headers: { 'Content-Type':'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY, Prefer: 'resolution=merge-duplicates,return=minimal' },
-      body: JSON.stringify({ entrega_id: entregaId, avaliador: currentAvaliador, nota })
     });
-    f2MinhaNotas[entregaId] = nota;
-    // atualiza local
-    if (!f2Notas[entregaId]) f2Notas[entregaId] = [];
-    const idx = f2Notas[entregaId].findIndex(n => n.avaliador === currentAvaliador);
-    if (idx !== -1) f2Notas[entregaId][idx].nota = nota;
-    else f2Notas[entregaId].push({ avaliador: currentAvaliador, nota });
-    showToast('⭐ Nota ' + nota.toFixed(1) + ' salva!', 'success');
-    loadFase2(); // recarrega para atualizar médias e ranking
-  } catch(e) {
-    showToast('❌ Erro ao salvar nota: ' + e.message, 'error');
-  }
-}
+    const rankingOrdenado = [...comMedia].filter(d=>d.media!==null).sort((a,b)=>b.media-a.media);
+    const getRank = id => { const i=rankingOrdenado.findIndex(d=>d.id===id); return i>=0?i+1:null; };
 
-async function loadFase2() {
-  document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--muted);"><div class="spinner"></div> Carregando...</td></tr>';
-  try {
-    const res = await fetch(SUPABASE_URL + '/rest/v1/entregas_fase2?select=*,inscricoes(nome,email,curso)&order=created_at.desc',
-      { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } });
-    const data = await res.json();
-    const segLabels = { hardware:'⚙️ Hardware', software:'💻 Software', manufatura:'🖨️ Manufatura 3D', ia:'🤖 IA' };
-    document.getElementById('f2Total').textContent    = data.length;
-    document.getElementById('f2Hardware').textContent = data.filter(d=>d.segmento==='hardware').length;
-    document.getElementById('f2Software').textContent = data.filter(d=>d.segmento==='software').length;
-    document.getElementById('f2Manu').textContent     = data.filter(d=>d.segmento==='manufatura').length;
-    document.getElementById('f2IA').textContent       = data.filter(d=>d.segmento==='ia').length;
-    if (!data.length) {
-      document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--muted);">Nenhuma entrega recebida ainda.</td></tr>'; return;
-    }
-    document.getElementById('f2TableBody').innerHTML = data.map(d => {
-      const nome  = d.inscricoes?.nome  || '—';
+    document.getElementById('f2TableBody').innerHTML = comMedia.map(d => {
+      const nome  = d.inscricoes?.nome  || '--';
       const email = d.inscricoes?.email || d.email;
       const seg   = segLabels[d.segmento] || d.segmento;
       const fname = d.arquivo_nome || 'arquivo.pdf';
-      // extrai o nome do arquivo da URL — tenta múltiplos padrões
+      const minhaNota = f2MinhaNotas[d.id];
+      const rank = getRank(d.id);
+      const isTop5 = rank !== null && rank <= 5;
+
       let filePath = null;
       const url = d.arquivo_url || '';
       const m1 = url.match(/fase2-projetos\/(.+?)(\?|$)/);
-      const m2 = url.match(/\/object\/(?:sign|public)\/fase2-projetos\/(.+?)(\?|$)/);
       if (m1) filePath = m1[1];
-      else if (m2) filePath = m2[1];
       else if (d.arquivo_nome) filePath = d.arquivo_nome;
-      return `<tr style="border-bottom:1px solid rgba(74,160,85,0.07);">
-        <td style="padding:12px;font-size:13px;"><div style="font-weight:600">${esc(nome)}</div><div style="font-size:11px;color:var(--muted)">${esc(email)}</div></td>
-        <td style="padding:12px;font-size:13px;"><span style="padding:4px 10px;background:rgba(74,160,85,0.1);border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;">${seg}</span></td>
-        <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${esc(fname)}</td>
-        <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${fmtDate(d.created_at)}</td>
-        <td style="padding:12px;">
-          ${filePath
-            ? `<button onclick="downloadPDF('${filePath}','${esc(fname)}')" style="padding:5px 12px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ Baixar PDF</button>`
-            : `<span style="font-size:12px;color:var(--error)">❌ arquivo indisponível</span>`}
-        </td>
-      </tr>`;
+
+      const corRank = rank===1?'#ffd700':rank===2?'#c0c0c0':rank===3?'#cd7f32':'var(--accent)';
+      const rankBadge = rank
+        ? '<span style="display:inline-flex;align-items:center;justify-content:center;width:22px;height:22px;background:'+corRank+';border-radius:50%;font-size:10px;font-weight:800;color:#0b1a0f;margin-right:6px;">'+rank+'</span>'
+        : '<span style="font-size:11px;color:var(--muted);margin-right:4px;">-</span>';
+
+      const ns = f2Notas[d.id] || [];
+      const outrasNotas = ns.filter(n=>n.avaliador!==currentAvaliador);
+      const notasBadges = outrasNotas.map(n =>
+        '<span style="font-size:10px;padding:2px 6px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;font-family:monospace;color:var(--muted);" title="'+esc(n.avaliador)+'">'+parseFloat(n.nota).toFixed(1)+'</span>'
+      ).join(' ');
+
+      const mediaHTML = d.media !== null
+        ? '<span style="font-family:monospace;font-size:20px;font-weight:800;color:'+(isTop5?'var(--accent2)':'var(--text)')+';">'+d.media+'</span>'
+          + '<span style="font-size:10px;color:var(--muted);display:block;">'+d.totalNotas+'/'+TOTAL_AVALIADORES+' aval.</span>'
+          + (notasBadges?'<div style="margin-top:4px;display:flex;gap:3px;justify-content:center;flex-wrap:wrap;">'+notasBadges+'</div>':'')
+        : '<span style="font-size:12px;color:var(--muted);">aguardando</span>';
+
+      const inputBorder = minhaNota!==undefined?'var(--accent)':'var(--border)';
+      const btnLabel = minhaNota!==undefined?'Editar':'Salvar';
+      const notaInput = '<div style="display:flex;align-items:center;gap:6px;">'
+        + '<input type="number" min="0" max="10" step="0.1" id="nota_'+d.id+'" value="'+(minhaNota!==undefined?parseFloat(minhaNota).toFixed(1):'')+'" placeholder="0-10"'
+        + ' style="width:62px;padding:7px 6px;background:var(--surface2);border:1.5px solid '+inputBorder+';border-radius:8px;color:var(--text);font-family:monospace;font-size:14px;font-weight:700;outline:none;text-align:center;">'
+        + '<button onclick="salvarNota('+d.id+','+d.inscricao_id+')" style="padding:6px 10px;background:rgba(74,160,85,0.12);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;white-space:nowrap;">'+btnLabel+'</button>'
+        + '</div>';
+
+      const pdfBtn = filePath
+        ? '<button onclick="downloadPDF(\'' + filePath.replace(/'/g,"\\'") + '\',\'' + esc(fname) + '\')" style="padding:5px 10px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;">PDF</button>'
+        : '<span style="font-size:11px;color:var(--error)">indisponivel</span>';
+
+      return '<tr style="border-bottom:1px solid rgba(74,160,85,0.07);'+(isTop5?'background:rgba(74,160,85,0.03);':'')+'">'
+        + '<td style="padding:12px;font-size:13px;">'+rankBadge+'<strong>'+esc(nome)+'</strong><div style="font-size:11px;color:var(--muted);margin-left:28px;">'+esc(email)+'</div></td>'
+        + '<td style="padding:10px 12px;font-size:12px;">'+esc(seg)+'</td>'
+        + '<td style="padding:10px 12px;text-align:center;">'+mediaHTML+'</td>'
+        + '<td style="padding:10px 12px;">'+notaInput+'</td>'
+        + '<td style="padding:10px 12px;font-size:11px;color:var(--muted);">'+fmtDate(d.created_at)+'</td>'
+        + '<td style="padding:10px 12px;">'+pdfBtn+'</td>'
+      + '</tr>';
     }).join('');
+
+    const avaliados = comMedia.filter(d=>d.media!==null).length;
+    document.getElementById('f2Avaliados').textContent = avaliados+'/'+entregas.length;
+
   } catch(e) {
-    document.getElementById('f2TableBody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--error);">❌ Erro: ${e.message}</td></tr>`;
+    document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--error);">Erro: '+e.message+'</td></tr>';
   }
 }
 
-async function downloadPDF(filePath, fileName) {
+async function salvarNota(entregaId, inscricaoId) {
+  const input = document.getElementById('nota_' + entregaId);
+  const nota = parseFloat(input.value);
+  if (isNaN(nota) || nota < 0 || nota > 10) { showToast('Nota deve ser entre 0 e 10','error'); return; }
   try {
-    // Com bucket público, a URL é direta — sem necessidade de assinatura
-    const publicURL = `${SUPABASE_URL}/storage/v1/object/public/fase2-projetos/${filePath}`;
-    window.open(publicURL, '_blank');
-    showToast('✅ PDF aberto!', 'success');
-  } catch(e) {
-    showToast('❌ Erro ao abrir PDF: ' + e.message, 'error');
-  }
+    const payload = { entrega_id: entregaId, avaliador: currentAvaliador, nota };
+    if (inscricaoId) payload.inscricao_id = inscricaoId;
+    const res = await fetch(SUPABASE_URL + '/rest/v1/notas_fase2', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', apikey:SUPABASE_KEY, Authorization:'Bearer '+SUPABASE_KEY, Prefer:'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify(payload)
+    });
+    if (!res.ok) throw new Error(await res.text());
+    showToast('Nota '+nota.toFixed(1)+' salva!','success');
+    loadFase2();
+  } catch(e) { showToast('Erro ao salvar: '+e.message,'error'); }
+}
+
+async function downloadPDF(filePath, fileName) {
+  const publicURL = SUPABASE_URL + '/storage/v1/object/public/fase2-projetos/' + filePath;
+  window.open(publicURL, '_blank');
+  showToast('PDF aberto!','success');
 }
 
 function showToast(msg,type='success'){const t=document.getElementById('toast');t.textContent=msg;t.className=`toast toast-${type} show`;setTimeout(()=>t.className='toast',3000)}
