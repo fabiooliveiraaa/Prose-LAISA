@@ -130,10 +130,21 @@ tbody td{padding:12px;font-size:13px;vertical-align:middle}
 .notes-textarea{width:100%;padding:10px 14px;background:var(--surface2);border:1.5px solid var(--border);border-radius:10px;color:var(--text);font-family:'DM Sans',sans-serif;font-size:13px;outline:none;resize:vertical;min-height:70px;margin-top:6px}
 .notes-textarea:focus{border-color:var(--accent)}
 .save-notes-btn{margin-top:6px;padding:6px 14px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+/* ── PARECER CARD ─── */
+.parecer-card{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:14px 16px}
+.parecer-card-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:8px}
+.parecer-avaliador{font-size:12px;font-weight:700;color:var(--accent2)}
+.parecer-data{font-size:11px;color:var(--muted);font-family:'JetBrains Mono',monospace}
+.parecer-voto{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:12px;font-size:10px;font-weight:700;font-family:'JetBrains Mono',monospace;margin-bottom:8px}
+.parecer-voto-a{background:rgba(93,201,106,0.12);color:var(--success);border:1px solid rgba(93,201,106,0.3)}
+.parecer-voto-r{background:rgba(255,107,107,0.12);color:var(--error);border:1px solid rgba(255,107,107,0.3)}
+.parecer-texto{font-size:13px;color:var(--text);line-height:1.7;white-space:pre-wrap}
 .toast{position:fixed;bottom:22px;right:22px;z-index:999;padding:12px 18px;border-radius:12px;font-size:14px;font-weight:500;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);box-shadow:0 8px 32px rgba(0,0,0,0.4);transform:translateY(80px);opacity:0;transition:all 0.3s cubic-bezier(0.34,1.56,0.64,1)}
 .toast.show{transform:translateY(0);opacity:1}
 .toast-success{border-color:rgba(93,201,106,0.4)}
 .toast-error{border-color:rgba(255,107,107,0.4)}
+.toast-info{border-color:rgba(125,204,106,0.3)}
 .spinner{display:inline-block;width:16px;height:16px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin 0.7s linear infinite}
 @keyframes spin{to{transform:rotate(360deg)}}
 .loading-row td{text-align:center;padding:60px;color:var(--muted)}
@@ -253,42 +264,81 @@ tbody td{padding:12px;font-size:13px;vertical-align:middle}
         <div class="motivacao-text" id="mMotivacao">—</div>
       </div>
       <div class="modal-section">
-        <div class="modal-section-title">Observações internas</div>
-        <textarea class="notes-textarea" id="mNotes" placeholder="Observações sobre este candidato (visível para todos os avaliadores)..."></textarea>
-        <button class="save-notes-btn" onclick="saveNotes()">Salvar observações</button>
+        <div class="modal-section-title" style="display:flex;align-items:center;justify-content:space-between;">
+          <span>Pareceres</span>
+          <div style="display:flex;gap:4px;">
+            <button id="parecerTabBtn1" onclick="switchParecerTab('geral')"
+              style="padding:4px 12px;border:none;border-bottom:2px solid var(--accent2);background:none;color:var(--accent2);font-size:11px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;border-radius:6px 6px 0 0;">
+              🌐 Geral
+            </button>
+            <button id="parecerTabBtn2" onclick="switchParecerTab('meu')"
+              style="padding:4px 12px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;border-radius:6px 6px 0 0;">
+              ✍️ Meu parecer
+            </button>
+            <button id="parecerTabBtn3" onclick="switchParecerTab('todos')"
+              style="padding:4px 12px;border:none;border-bottom:2px solid transparent;background:none;color:var(--muted);font-size:11px;cursor:pointer;font-family:'DM Sans',sans-serif;border-radius:6px 6px 0 0;">
+              👥 Todos
+            </button>
+          </div>
+        </div>
+
+        <!-- TAB: Observações gerais (compartilhadas) -->
+        <div id="parecerTabGeral">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Visível para todos os avaliadores.</div>
+          <textarea class="notes-textarea" id="mNotes" placeholder="Observações gerais sobre este candidato..."></textarea>
+          <button class="save-notes-btn" onclick="saveNotes()">Salvar observações gerais</button>
+        </div>
+
+        <!-- TAB: Meu parecer individual -->
+        <div id="parecerTabMeu" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:8px;">Seu parecer individual sobre este candidato. Visível apenas para você.</div>
+          <textarea class="notes-textarea" id="mParecer"
+            placeholder="Escreva seu parecer individual: pontos fortes, pontos fracos, justificativa do seu voto..."></textarea>
+          <button class="save-notes-btn" onclick="saveParecer()" style="background:rgba(125,204,106,0.1);border-color:rgba(125,204,106,0.3);color:var(--accent2);">Salvar meu parecer</button>
+        </div>
+
+        <!-- TAB: Pareceres de todos -->
+        <div id="parecerTabTodos" style="display:none;">
+          <div style="font-size:12px;color:var(--muted);margin-bottom:12px;">Pareceres individuais de cada avaliador.</div>
+          <div id="parecerTodosLista" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">⏳ Carregando...</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 </div>
 
 <!-- FASE 2 ENTREGAS -->
-<div id="viewFase2" style="display:none;flex:1;overflow:auto;padding:0 28px 32px;position:relative;z-index:1;">
+<div id="viewFase2" style="display:none;flex-direction:column;flex:1;overflow:auto;padding:0 28px 32px;position:relative;z-index:1;">
   <div style="display:flex;align-items:center;justify-content:space-between;padding:20px 0 14px;border-bottom:1px solid var(--border);margin-bottom:20px;flex-wrap:wrap;gap:12px;">
     <div>
-      <div style="font-size:11px;color:var(--accent2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Fase 2 — Projetos Recebidos</div>
-      <div style="font-size:13px;color:var(--muted);">Candidatos aprovados que enviaram o projeto fictício</div>
+      <div style="font-size:11px;color:var(--accent2);font-family:'JetBrains Mono',monospace;text-transform:uppercase;letter-spacing:2px;margin-bottom:4px;">Fase 2 — Avaliação de Projetos</div>
+      <div style="font-size:13px;color:var(--muted);">Os <strong style="color:var(--accent2)">5 primeiros</strong> pela média das notas serão os selecionados finais</div>
     </div>
     <button class="toolbar-btn" onclick="loadFase2()">↻ Atualizar</button>
   </div>
   <div style="display:flex;gap:14px;margin-bottom:20px;flex-wrap:wrap;">
-    <div class="stat-card s-total" style="min-width:120px;flex:1;"><div class="stat-icon">📬</div><div><div class="stat-label">Recebidos</div><div class="stat-value" id="f2Total">—</div></div></div>
-    <div class="stat-card s-aprov" style="min-width:120px;flex:1;"><div class="stat-icon">⚙️</div><div><div class="stat-label">Hardware</div><div class="stat-value" id="f2Hardware">—</div></div></div>
-    <div class="stat-card s-myvote" style="min-width:120px;flex:1;"><div class="stat-icon">💻</div><div><div class="stat-label">Software</div><div class="stat-value" id="f2Software">—</div></div></div>
-    <div class="stat-card s-pend" style="min-width:120px;flex:1;"><div class="stat-icon">🖨️</div><div><div class="stat-label">3D</div><div class="stat-value" id="f2Manu">—</div></div></div>
-    <div class="stat-card s-rej" style="min-width:120px;flex:1;"><div class="stat-icon">🤖</div><div><div class="stat-label">IA</div><div class="stat-value" id="f2IA">—</div></div></div>
+    <div class="stat-card s-total" style="min-width:110px;flex:1;"><div class="stat-icon">📬</div><div><div class="stat-label">Recebidos</div><div class="stat-value" id="f2Total">—</div></div></div>
+    <div class="stat-card s-aprov" style="min-width:110px;flex:1;"><div class="stat-icon">📊</div><div><div class="stat-label">Avaliados</div><div class="stat-value" id="f2Avaliados">—</div></div></div>
+    <div class="stat-card s-myvote" style="min-width:110px;flex:1;"><div class="stat-icon">⚙️</div><div><div class="stat-label">Hardware</div><div class="stat-value" id="f2Hardware">—</div></div></div>
+    <div class="stat-card s-pend" style="min-width:110px;flex:1;"><div class="stat-icon">💻</div><div><div class="stat-label">Software</div><div class="stat-value" id="f2Software">—</div></div></div>
+    <div class="stat-card" style="min-width:110px;flex:1;border:1px solid var(--border);background:var(--surface);border-radius:12px;padding:12px 18px;display:flex;align-items:center;gap:12px;"><div style="font-size:20px">🖨️</div><div><div class="stat-label">3D</div><div class="stat-value" id="f2Manu" style="color:var(--text)">—</div></div></div>
+    <div class="stat-card s-rej" style="min-width:110px;flex:1;"><div class="stat-icon">🤖</div><div><div class="stat-label">IA</div><div class="stat-value" id="f2IA">—</div></div></div>
   </div>
   <table style="width:100%;border-collapse:collapse;">
     <thead>
       <tr>
         <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Candidato</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Segmento</th>
-        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Arquivo</th>
+        <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Média</th>
+        <th style="padding:10px 12px;text-align:center;font-size:11px;font-weight:600;color:var(--accent2);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Minha nota (0–10)</th>
         <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Enviado em</th>
-        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">Ações</th>
+        <th style="padding:10px 12px;text-align:left;font-size:11px;font-weight:600;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;border-bottom:1px solid var(--border);font-family:'JetBrains Mono',monospace;background:var(--surface);">PDF</th>
       </tr>
     </thead>
     <tbody id="f2TableBody">
-      <tr><td colspan="5" style="text-align:center;padding:60px;color:var(--muted);">Clique em Atualizar para carregar.</td></tr>
+      <tr><td colspan="7" style="text-align:center;padding:60px;color:var(--muted);">Clique em Atualizar para carregar.</td></tr>
     </tbody>
   </table>
 </div>
@@ -503,8 +553,78 @@ async function saveNotes(){
     await api(`/rest/v1/inscricoes?id=eq.${currentId}`,{method:'PATCH',headers:{'Prefer':'return=minimal'},body:JSON.stringify({notas:notes})});
     const idx=allData.findIndex(r=>r.id===currentId);
     if(idx!==-1)allData[idx].notas=notes;
-    showToast('📝 Observações salvas','success');
+    showToast('📝 Observações gerais salvas','success');
   }catch(e){showToast('❌ Erro ao salvar','error')}
+}
+
+// ── PARECERES INDIVIDUAIS ──────────────────────────
+function switchParecerTab(tab) {
+  const tabs = { geral: 'parecerTabGeral', meu: 'parecerTabMeu', todos: 'parecerTabTodos' };
+  const btns = { geral: 'parecerTabBtn1', meu: 'parecerTabBtn2', todos: 'parecerTabBtn3' };
+  Object.keys(tabs).forEach(k => {
+    document.getElementById(tabs[k]).style.display = k === tab ? 'block' : 'none';
+    const btn = document.getElementById(btns[k]);
+    btn.style.borderBottom   = k === tab ? '2px solid var(--accent2)' : '2px solid transparent';
+    btn.style.color          = k === tab ? 'var(--accent2)' : 'var(--muted)';
+    btn.style.fontWeight     = k === tab ? '600' : '400';
+  });
+  if (tab === 'todos') loadTodosPareceres();
+  if (tab === 'meu')   loadMeuParecer();
+}
+
+async function loadMeuParecer() {
+  try {
+    const data = await api(`/rest/v1/pareceres?inscricao_id=eq.${currentId}&avaliador=eq.${encodeURIComponent(currentAvaliador)}&select=parecer`);
+    if (data.length) document.getElementById('mParecer').value = data[0].parecer || '';
+  } catch(e) { /* ignora se tabela ainda não existe */ }
+}
+
+async function saveParecer() {
+  const texto = document.getElementById('mParecer').value.trim();
+  if (!texto) { showToast('⚠️ Escreva algo antes de salvar','error'); return; }
+  try {
+    await api('/rest/v1/pareceres', {
+      method: 'POST',
+      headers: { 'Prefer': 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ inscricao_id: currentId, avaliador: currentAvaliador, parecer: texto })
+    });
+    showToast('✍️ Parecer salvo!', 'success');
+  } catch(e) { showToast('❌ Erro ao salvar parecer', 'error'); }
+}
+
+async function loadTodosPareceres() {
+  const lista = document.getElementById('parecerTodosLista');
+  lista.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;"><div class="spinner"></div> Carregando...</div>';
+  try {
+    const [pareceres, votos] = await Promise.all([
+      api(`/rest/v1/pareceres?inscricao_id=eq.${currentId}&select=*&order=created_at.asc`),
+      api(`/rest/v1/votos?inscricao_id=eq.${currentId}&select=avaliador,voto`)
+    ]);
+    const votoMap = {};
+    votos.forEach(v => votoMap[v.avaliador] = v.voto);
+
+    if (!pareceres.length) {
+      lista.innerHTML = '<div style="text-align:center;color:var(--muted);font-size:13px;padding:20px;">Nenhum parecer registrado ainda.</div>';
+      return;
+    }
+    lista.innerHTML = pareceres.map(p => {
+      const voto = votoMap[p.avaliador];
+      const votoBadge = voto
+        ? `<span class="parecer-voto ${voto==='aprovar'?'parecer-voto-a':'parecer-voto-r'}">${voto==='aprovar'?'✅ Aprovou':'❌ Reprovou'}</span>`
+        : '';
+      const isMe = p.avaliador === currentAvaliador;
+      return `<div class="parecer-card" style="${isMe?'border-color:rgba(125,204,106,0.3);':'' }">
+        <div class="parecer-card-header">
+          <span class="parecer-avaliador">${esc(p.avaliador)}${isMe?' <span style="font-size:10px;color:var(--muted)">(você)</span>':''}</span>
+          <span class="parecer-data">${fmtDate(p.created_at)}</span>
+        </div>
+        ${votoBadge}
+        <div class="parecer-texto">${esc(p.parecer)}</div>
+      </div>`;
+    }).join('');
+  } catch(e) {
+    lista.innerHTML = '<div style="text-align:center;color:var(--error);font-size:13px;padding:20px;">❌ Erro ao carregar pareceres.</div>';
+  }
 }
 
 function exportCSV(){
@@ -527,17 +647,141 @@ function esc(str){return(str||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').rep
 function fmtDate(iso){if(!iso)return'—';return new Date(iso).toLocaleString('pt-BR',{day:'2-digit',month:'2-digit',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 function setView(v) {
   const isFase1 = v === 'fase1';
-  // show/hide sections
-  ['stats-bar','toolbar','table-wrap'].forEach(cls => {
-    document.querySelectorAll('.'+cls).forEach(el => el.style.display = isFase1 ? '' : 'none');
+  document.querySelectorAll('.stats-bar,.toolbar,.table-wrap').forEach(el => {
+    el.style.display = isFase1 ? '' : 'none';
+    el.style.visibility = isFase1 ? '' : 'hidden';
+    el.style.height = isFase1 ? '' : '0';
+    el.style.overflow = isFase1 ? '' : 'hidden';
+    el.style.padding = isFase1 ? '' : '0';
+    el.style.margin = isFase1 ? '' : '0';
+    el.style.border = isFase1 ? '' : 'none';
   });
-  document.getElementById('viewFase2').style.display = isFase1 ? 'none' : 'block';
-  // nav buttons
+  document.getElementById('viewFase2').style.display = isFase1 ? 'none' : 'flex';
   document.getElementById('navFase1').style.background = isFase1 ? 'rgba(74,160,85,0.15)' : 'transparent';
   document.getElementById('navFase1').style.color = isFase1 ? 'var(--accent2)' : 'var(--muted)';
   document.getElementById('navFase2').style.background = !isFase1 ? 'rgba(74,160,85,0.15)' : 'transparent';
   document.getElementById('navFase2').style.color = !isFase1 ? 'var(--accent2)' : 'var(--muted)';
   if (!isFase1) loadFase2();
+}
+
+// ── FASE 2: NOTAS ─────────────────────────────────
+let f2Data = [];       // entregas
+let f2Notas = {};      // { entrega_id: [{ avaliador, nota }] }
+let f2MinhaNotas = {}; // { entrega_id: nota }
+
+async function loadFase2() {
+  document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--muted);"><div class="spinner"></div> Carregando...</td></tr>';
+  try {
+    const [entregas, notas] = await Promise.all([
+      fetch(SUPABASE_URL + '/rest/v1/entregas_fase2?select=*,inscricoes(nome,email,curso)&order=created_at.desc',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r=>r.json()),
+      fetch(SUPABASE_URL + '/rest/v1/notas_fase2?select=*',
+        { headers: { apikey: SUPABASE_KEY, Authorization: 'Bearer ' + SUPABASE_KEY } }).then(r=>r.json()).catch(()=>[])
+    ]);
+
+    f2Data = entregas;
+    f2Notas = {}; f2MinhaNotas = {};
+    notas.forEach(n => {
+      if (!f2Notas[n.entrega_id]) f2Notas[n.entrega_id] = [];
+      f2Notas[n.entrega_id].push(n);
+      if (n.avaliador === currentAvaliador) f2MinhaNotas[n.entrega_id] = n.nota;
+    });
+
+    const segLabels = { hardware:'⚙️ Hardware', software:'💻 Software', manufatura:'🖨️ 3D', ia:'🤖 IA' };
+    document.getElementById('f2Total').textContent    = entregas.length;
+    document.getElementById('f2Hardware').textContent = entregas.filter(d=>d.segmento==='hardware').length;
+    document.getElementById('f2Software').textContent = entregas.filter(d=>d.segmento==='software').length;
+    document.getElementById('f2Manu').textContent     = entregas.filter(d=>d.segmento==='manufatura').length;
+    document.getElementById('f2IA').textContent       = entregas.filter(d=>d.segmento==='ia').length;
+
+    if (!entregas.length) {
+      document.getElementById('f2TableBody').innerHTML = '<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--muted);">Nenhuma entrega recebida ainda.</td></tr>';
+      return;
+    }
+
+    // calcula médias e ordena para ranking
+    const comMedia = entregas.map(d => {
+      const ns = f2Notas[d.id] || [];
+      const media = ns.length ? (ns.reduce((s,n)=>s+parseFloat(n.nota),0)/ns.length).toFixed(1) : null;
+      return { ...d, media, totalNotas: ns.length };
+    }).sort((a,b) => (b.media||0) - (a.media||0));
+
+    document.getElementById('f2TableBody').innerHTML = comMedia.map((d, idx) => {
+      const nome  = d.inscricoes?.nome || '—';
+      const email = d.inscricoes?.email || d.email;
+      const seg   = segLabels[d.segmento] || d.segmento;
+      const fname = d.arquivo_nome || 'arquivo.pdf';
+      const filePathMatch = (d.arquivo_url||'').match(/fase2-projetos\/(.+)$/);
+      const filePath = filePathMatch ? filePathMatch[1] : null;
+      const minhaNota = f2MinhaNotas[d.id];
+      const rank = idx + 1;
+      const isTop5 = d.media !== null && rank <= 5;
+      const rankBadge = isTop5
+        ? `<span style="display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;background:${rank===1?'#ffd700':rank===2?'#c0c0c0':rank===3?'#cd7f32':'var(--accent)'};border-radius:50%;font-size:11px;font-weight:800;color:#0b1a0f;margin-right:6px;">${rank}</span>`
+        : `<span style="font-size:11px;color:var(--muted);margin-right:6px;">#${rank}</span>`;
+
+      return `<tr style="border-bottom:1px solid rgba(74,160,85,0.07);${isTop5?'background:rgba(74,160,85,0.04);':''}">
+        <td style="padding:12px;font-size:13px;">${rankBadge}<strong>${esc(nome)}</strong><div style="font-size:11px;color:var(--muted);margin-left:30px;">${esc(email)}</div></td>
+        <td style="padding:12px;font-size:13px;"><span style="padding:3px 8px;background:rgba(74,160,85,0.1);border:1px solid var(--border);border-radius:6px;font-size:11px;font-family:'JetBrains Mono',monospace;">${seg}</span></td>
+        <td style="padding:12px;text-align:center;">
+          ${d.media !== null
+            ? `<span style="font-family:'JetBrains Mono',monospace;font-size:18px;font-weight:800;color:${isTop5?'var(--accent2)':'var(--text)'};">${d.media}</span><span style="font-size:10px;color:var(--muted);display:block;">${d.totalNotas}/${TOTAL_AVALIADORES} avaliador(es)</span>`
+            : `<span style="font-size:12px;color:var(--muted);">sem nota</span>`}
+        </td>
+        <td style="padding:12px;text-align:center;">
+          <div style="display:flex;align-items:center;gap:6px;justify-content:center;">
+            <input type="number" min="0" max="10" step="0.1"
+              id="nota_${d.id}"
+              value="${minhaNota !== undefined ? minhaNota : ''}"
+              placeholder="0–10"
+              style="width:64px;padding:6px 8px;background:var(--surface2);border:1.5px solid ${minhaNota!==undefined?'var(--accent)':'var(--border)'};border-radius:8px;color:var(--text);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;outline:none;text-align:center;">
+            <button onclick="salvarNota(${d.id})"
+              style="padding:6px 12px;background:rgba(74,160,85,0.12);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;white-space:nowrap;">
+              ${minhaNota !== undefined ? '✏️ Editar' : '✅ Salvar'}
+            </button>
+          </div>
+        </td>
+        <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${fmtDate(d.created_at)}</td>
+        <td style="padding:12px;">
+          ${filePath
+            ? `<button onclick="downloadPDF('${filePath}','${esc(fname)}')" style="padding:5px 10px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ PDF</button>`
+            : `<span style="font-size:11px;color:var(--error)">indisponível</span>`}
+        </td>
+      </tr>`;
+    }).join('');
+
+    // atualiza stat dos avaliados
+    const avaliados = comMedia.filter(d => d.media !== null).length;
+    document.getElementById('f2Avaliados').textContent = avaliados + '/' + entregas.length;
+
+  } catch(e) {
+    document.getElementById('f2TableBody').innerHTML = `<tr><td colspan="7" style="text-align:center;padding:60px;color:var(--error);">❌ Erro: ${e.message}</td></tr>`;
+  }
+}
+
+async function salvarNota(entregaId) {
+  const input = document.getElementById('nota_' + entregaId);
+  const nota = parseFloat(input.value);
+  if (isNaN(nota) || nota < 0 || nota > 10) {
+    showToast('⚠️ Nota deve ser entre 0 e 10', 'error'); return;
+  }
+  try {
+    await fetch(SUPABASE_URL + '/rest/v1/notas_fase2', {
+      method: 'POST',
+      headers: { 'Content-Type':'application/json', apikey: SUPABASE_KEY, Authorization: 'Bearer '+SUPABASE_KEY, Prefer: 'resolution=merge-duplicates,return=minimal' },
+      body: JSON.stringify({ entrega_id: entregaId, avaliador: currentAvaliador, nota })
+    });
+    f2MinhaNotas[entregaId] = nota;
+    // atualiza local
+    if (!f2Notas[entregaId]) f2Notas[entregaId] = [];
+    const idx = f2Notas[entregaId].findIndex(n => n.avaliador === currentAvaliador);
+    if (idx !== -1) f2Notas[entregaId][idx].nota = nota;
+    else f2Notas[entregaId].push({ avaliador: currentAvaliador, nota });
+    showToast('⭐ Nota ' + nota.toFixed(1) + ' salva!', 'success');
+    loadFase2(); // recarrega para atualizar médias e ranking
+  } catch(e) {
+    showToast('❌ Erro ao salvar nota: ' + e.message, 'error');
+  }
 }
 
 async function loadFase2() {
@@ -560,18 +804,46 @@ async function loadFase2() {
       const email = d.inscricoes?.email || d.email;
       const seg   = segLabels[d.segmento] || d.segmento;
       const fname = d.arquivo_nome || 'arquivo.pdf';
+      // extrai só o nome do arquivo da URL para gerar URL assinada
+      const filePathMatch = (d.arquivo_url || '').match(/fase2-projetos\/(.+)$/);
+      const filePath = filePathMatch ? filePathMatch[1] : null;
       return `<tr style="border-bottom:1px solid rgba(74,160,85,0.07);">
         <td style="padding:12px;font-size:13px;"><div style="font-weight:600">${esc(nome)}</div><div style="font-size:11px;color:var(--muted)">${esc(email)}</div></td>
         <td style="padding:12px;font-size:13px;"><span style="padding:4px 10px;background:rgba(74,160,85,0.1);border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;">${seg}</span></td>
         <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${esc(fname)}</td>
         <td style="padding:12px;font-size:12px;color:var(--muted);font-family:'JetBrains Mono',monospace;">${fmtDate(d.created_at)}</td>
         <td style="padding:12px;">
-          <a href="${d.arquivo_url}" target="_blank" style="padding:5px 12px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;text-decoration:none;">⬇ Baixar PDF</a>
+          ${filePath
+            ? `<button onclick="downloadPDF('${filePath}','${esc(fname)}')" style="padding:5px 12px;background:rgba(74,160,85,0.1);border:1.5px solid var(--border);border-radius:8px;color:var(--accent2);font-size:12px;font-weight:600;cursor:pointer;font-family:'DM Sans',sans-serif;">⬇ Baixar PDF</button>`
+            : `<span style="font-size:12px;color:var(--error)">❌ arquivo indisponível</span>`}
         </td>
       </tr>`;
     }).join('');
   } catch(e) {
     document.getElementById('f2TableBody').innerHTML = `<tr><td colspan="5" style="text-align:center;padding:60px;color:var(--error);">❌ Erro: ${e.message}</td></tr>`;
+  }
+}
+
+async function downloadPDF(filePath, fileName) {
+  try {
+    showToast('⏳ Gerando link de download...', 'info');
+    // gera URL assinada com validade de 60 segundos
+    const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/fase2-projetos/${filePath}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': SUPABASE_KEY,
+        'Authorization': 'Bearer ' + SUPABASE_KEY
+      },
+      body: JSON.stringify({ expiresIn: 60 })
+    });
+    if (!res.ok) throw new Error(await res.text());
+    const { signedURL } = await res.json();
+    // abre o PDF em nova aba
+    window.open(SUPABASE_URL + signedURL, '_blank');
+    showToast('✅ PDF aberto!', 'success');
+  } catch(e) {
+    showToast('❌ Erro ao abrir PDF: ' + e.message, 'error');
   }
 }
 
