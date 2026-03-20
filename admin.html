@@ -804,9 +804,14 @@ async function loadFase2() {
       const email = d.inscricoes?.email || d.email;
       const seg   = segLabels[d.segmento] || d.segmento;
       const fname = d.arquivo_nome || 'arquivo.pdf';
-      // extrai só o nome do arquivo da URL para gerar URL assinada
-      const filePathMatch = (d.arquivo_url || '').match(/fase2-projetos\/(.+)$/);
-      const filePath = filePathMatch ? filePathMatch[1] : null;
+      // extrai o nome do arquivo da URL — tenta múltiplos padrões
+      let filePath = null;
+      const url = d.arquivo_url || '';
+      const m1 = url.match(/fase2-projetos\/(.+?)(\?|$)/);
+      const m2 = url.match(/\/object\/(?:sign|public)\/fase2-projetos\/(.+?)(\?|$)/);
+      if (m1) filePath = m1[1];
+      else if (m2) filePath = m2[1];
+      else if (d.arquivo_nome) filePath = d.arquivo_nome;
       return `<tr style="border-bottom:1px solid rgba(74,160,85,0.07);">
         <td style="padding:12px;font-size:13px;"><div style="font-weight:600">${esc(nome)}</div><div style="font-size:11px;color:var(--muted)">${esc(email)}</div></td>
         <td style="padding:12px;font-size:13px;"><span style="padding:4px 10px;background:rgba(74,160,85,0.1);border:1px solid var(--border);border-radius:8px;font-size:12px;font-family:'JetBrains Mono',monospace;">${seg}</span></td>
@@ -827,7 +832,8 @@ async function loadFase2() {
 async function downloadPDF(filePath, fileName) {
   try {
     showToast('⏳ Gerando link de download...', 'info');
-    // gera URL assinada com validade de 60 segundos
+
+    // gera URL assinada com validade de 300 segundos (5 min)
     const res = await fetch(`${SUPABASE_URL}/storage/v1/object/sign/fase2-projetos/${filePath}`, {
       method: 'POST',
       headers: {
@@ -835,15 +841,27 @@ async function downloadPDF(filePath, fileName) {
         'apikey': SUPABASE_KEY,
         'Authorization': 'Bearer ' + SUPABASE_KEY
       },
-      body: JSON.stringify({ expiresIn: 60 })
+      body: JSON.stringify({ expiresIn: 300 })
     });
-    if (!res.ok) throw new Error(await res.text());
-    const { signedURL } = await res.json();
-    // abre o PDF em nova aba
-    window.open(SUPABASE_URL + signedURL, '_blank');
+
+    const json = await res.json();
+    if (!res.ok) throw new Error(JSON.stringify(json));
+
+    // signedURL já vem como caminho relativo: /storage/v1/object/sign/...
+    // basta concatenar com a base do Supabase sem duplicar
+    const signedURL = json.signedURL || json.signedUrl;
+    if (!signedURL) throw new Error('URL assinada não retornada: ' + JSON.stringify(json));
+
+    // monta a URL final corretamente
+    const finalURL = signedURL.startsWith('http')
+      ? signedURL
+      : `${SUPABASE_URL}${signedURL}`;
+
+    window.open(finalURL, '_blank');
     showToast('✅ PDF aberto!', 'success');
   } catch(e) {
-    showToast('❌ Erro ao abrir PDF: ' + e.message, 'error');
+    console.error('downloadPDF error:', e);
+    showToast('❌ Erro: ' + e.message, 'error');
   }
 }
 
