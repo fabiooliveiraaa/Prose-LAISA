@@ -1,0 +1,638 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checklist de Entrevista — LAISA 2026</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:ital,wght@0,400;0,500;1,400&family=Lora:ital,wght@0,400;1,400;1,600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg:       #0c1a0f;
+    --surface:  #132018;
+    --surface2: #1a2d1f;
+    --border:   rgba(74,160,85,0.18);
+    --green:    #4aa055;
+    --green2:   #7dcc6a;
+    --text:     #e8f0e9;
+    --muted:    #6b8f70;
+    --warn:     #f0c060;
+    --red:      #e05555;
+  }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Lora', Georgia, serif;
+    min-height: 100vh;
+    padding: 40px 20px 80px;
+    position: relative;
+    overflow-x: hidden;
+  }
+
+  /* grain overlay */
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none; z-index: 0;
+  }
+
+  .wrap { max-width: 780px; margin: 0 auto; position: relative; z-index: 1; }
+
+  /* header */
+  .header { margin-bottom: 48px; }
+  .header-eyebrow {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px; letter-spacing: 3px; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+  }
+  .header-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(32px, 5vw, 52px);
+    font-weight: 800; line-height: 1.05;
+    color: var(--text);
+    letter-spacing: -1px;
+  }
+  .header-title em { color: var(--green2); font-style: italic; font-family: 'Lora', serif; }
+  .header-sub {
+    margin-top: 14px; font-size: 15px; color: var(--muted);
+    line-height: 1.7; max-width: 560px;
+  }
+  .header-line {
+    margin-top: 28px; height: 2px;
+    background: linear-gradient(90deg, var(--green) 0%, transparent 80%);
+  }
+
+  /* candidate selector */
+  .candidate-bar {
+    display: flex; align-items: center; gap: 12px;
+    flex-wrap: wrap; margin-bottom: 36px;
+  }
+  .candidate-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase; color: var(--muted);
+  }
+  .candidate-input {
+    flex: 1; min-width: 200px;
+    padding: 10px 16px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 10px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 600;
+    outline: none; transition: border-color 0.2s;
+  }
+  .candidate-input:focus { border-color: var(--green); }
+  .candidate-input::placeholder { color: var(--muted); font-weight: 400; }
+
+  .progress-wrap { margin-bottom: 36px; }
+  .progress-label {
+    display: flex; justify-content: space-between; align-items: center;
+    margin-bottom: 8px;
+  }
+  .progress-text { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--muted); }
+  .progress-pct { font-family: 'DM Mono', monospace; font-size: 13px; color: var(--green2); font-weight: 500; }
+  .progress-bar {
+    height: 4px; background: var(--surface2); border-radius: 99px; overflow: hidden;
+  }
+  .progress-fill {
+    height: 100%; background: linear-gradient(90deg, var(--green), var(--green2));
+    border-radius: 99px; transition: width 0.4s ease;
+  }
+
+  /* section */
+  .section { margin-bottom: 32px; }
+  .section-header {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 16px; padding-bottom: 12px;
+    border-bottom: 1px solid var(--border);
+  }
+  .section-icon {
+    width: 36px; height: 36px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 17px; flex-shrink: 0;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif; font-size: 13px; font-weight: 700;
+    letter-spacing: 1.5px; text-transform: uppercase; color: var(--text);
+  }
+  .section-count {
+    margin-left: auto;
+    font-family: 'DM Mono', monospace; font-size: 11px; color: var(--muted);
+  }
+
+  /* question card */
+  .question {
+    display: flex; gap: 14px; align-items: flex-start;
+    padding: 14px 16px;
+    border-radius: 12px;
+    border: 1.5px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 8px;
+    background: var(--surface);
+    user-select: none;
+  }
+  .question:hover { border-color: var(--border); background: var(--surface2); }
+  .question.checked {
+    border-color: rgba(74,160,85,0.35);
+    background: rgba(74,160,85,0.06);
+  }
+  .question.flagged {
+    border-color: rgba(240,192,96,0.35);
+    background: rgba(240,192,96,0.05);
+  }
+
+  .check-box {
+    width: 22px; height: 22px; border-radius: 6px; flex-shrink: 0;
+    border: 2px solid var(--border);
+    display: flex; align-items: center; justify-content: center;
+    transition: all 0.2s; margin-top: 1px;
+    font-size: 12px;
+  }
+  .question.checked .check-box {
+    background: var(--green); border-color: var(--green); color: #fff;
+  }
+  .question.flagged .check-box {
+    background: var(--warn); border-color: var(--warn); color: #1a1000;
+  }
+
+  .question-body { flex: 1; }
+  .question-text {
+    font-size: 14px; line-height: 1.6; color: var(--text);
+  }
+  .question.checked .question-text { color: var(--muted); }
+  .question-tip {
+    margin-top: 5px; font-size: 12px; color: var(--muted);
+    font-style: italic; line-height: 1.5;
+  }
+
+  .question-actions {
+    display: flex; gap: 6px; margin-left: auto; flex-shrink: 0;
+  }
+  .btn-flag {
+    padding: 3px 8px; border-radius: 6px; font-size: 10px;
+    background: transparent; border: 1px solid var(--border);
+    color: var(--muted); cursor: pointer;
+    font-family: 'DM Mono', monospace; transition: all 0.15s;
+  }
+  .btn-flag:hover { border-color: var(--warn); color: var(--warn); }
+  .question.flagged .btn-flag { border-color: var(--warn); color: var(--warn); }
+
+  /* notes area */
+  .notes-section {
+    margin-top: 36px; padding: 24px 28px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+  }
+  .notes-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--green); margin-bottom: 12px;
+  }
+  .notes-textarea {
+    width: 100%; min-height: 100px;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 10px; color: var(--text);
+    font-family: 'Lora', serif; font-size: 14px; line-height: 1.7;
+    padding: 14px 16px; outline: none; resize: vertical;
+    transition: border-color 0.2s;
+  }
+  .notes-textarea:focus { border-color: var(--green); }
+  .notes-textarea::placeholder { color: var(--muted); font-style: italic; }
+
+  /* verdict */
+  .verdict-section {
+    margin-top: 28px; padding: 24px 28px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: 16px;
+  }
+  .verdict-label {
+    font-family: 'DM Mono', monospace; font-size: 11px;
+    letter-spacing: 2px; text-transform: uppercase;
+    color: var(--green); margin-bottom: 16px;
+  }
+  .verdict-btns { display: flex; gap: 10px; flex-wrap: wrap; }
+  .verdict-btn {
+    padding: 10px 22px; border-radius: 10px; font-size: 13px;
+    font-family: 'Syne', sans-serif; font-weight: 700; cursor: pointer;
+    border: 2px solid transparent; transition: all 0.2s;
+  }
+  .verdict-btn.v-aprovado {
+    background: rgba(74,160,85,0.12); border-color: rgba(74,160,85,0.3); color: var(--green2);
+  }
+  .verdict-btn.v-aprovado.active { background: var(--green); border-color: var(--green); color: #0c1a0f; }
+  .verdict-btn.v-lista {
+    background: rgba(240,192,96,0.1); border-color: rgba(240,192,96,0.3); color: var(--warn);
+  }
+  .verdict-btn.v-lista.active { background: var(--warn); border-color: var(--warn); color: #1a1000; }
+  .verdict-btn.v-reprovado {
+    background: rgba(224,85,85,0.1); border-color: rgba(224,85,85,0.3); color: var(--red);
+  }
+  .verdict-btn.v-reprovado.active { background: var(--red); border-color: var(--red); color: #fff; }
+
+  /* print / export */
+  .actions-bar {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    margin-top: 40px; padding-top: 28px;
+    border-top: 1px solid var(--border);
+  }
+  .btn-action {
+    padding: 10px 20px; border-radius: 10px; font-size: 13px;
+    font-family: 'Syne', sans-serif; font-weight: 600; cursor: pointer;
+    border: 1.5px solid var(--border); transition: all 0.2s;
+    background: var(--surface); color: var(--text);
+  }
+  .btn-action:hover { border-color: var(--green); color: var(--green2); }
+  .btn-action.primary {
+    background: var(--green); border-color: var(--green); color: #0c1a0f;
+  }
+  .btn-action.primary:hover { background: var(--green2); border-color: var(--green2); }
+
+  .summary-box {
+    display: none; margin-top: 24px; padding: 20px 24px;
+    background: var(--surface2); border: 1.5px solid var(--border);
+    border-radius: 14px; font-family: 'DM Mono', monospace; font-size: 12px;
+    line-height: 1.9; color: var(--text); white-space: pre-wrap;
+  }
+
+  @media print {
+    body { background: #fff; color: #111; padding: 20px; }
+    body::before { display: none; }
+    .actions-bar, .btn-flag { display: none; }
+    .question { border: 1px solid #ddd; break-inside: avoid; }
+    .header-title { color: #111; }
+    .section-title { color: #333; }
+  }
+
+  /* animations */
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .section { animation: slideIn 0.4s ease both; }
+  .section:nth-child(2) { animation-delay: 0.05s; }
+  .section:nth-child(3) { animation-delay: 0.1s; }
+  .section:nth-child(4) { animation-delay: 0.15s; }
+  .section:nth-child(5) { animation-delay: 0.2s; }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <!-- header -->
+  <div class="header">
+    <div class="header-eyebrow">✦ PROSEL LAISA 2026 · Entrevista Final</div>
+    <h1 class="header-title">Checklist de<br><em>Entrevista</em></h1>
+    <p class="header-sub">Guia estruturado para a entrevista final com os 8 candidatos selecionados. Marque as perguntas conforme forem sendo abordadas.</p>
+    <div class="header-line"></div>
+  </div>
+
+  <!-- candidato -->
+  <div class="candidate-bar">
+    <span class="candidate-label">Candidato</span>
+    <input class="candidate-input" id="candidatoNome" type="text" placeholder="Nome do candidato..." oninput="updateSummary()">
+    <input class="candidate-input" style="max-width:160px;" id="candidatoProto" type="text" placeholder="#LAISA-2026-0000" oninput="this.value=this.value.toUpperCase()">
+  </div>
+
+  <!-- progresso -->
+  <div class="progress-wrap">
+    <div class="progress-label">
+      <span class="progress-text">Perguntas abordadas</span>
+      <span class="progress-pct" id="progressPct">0%</span>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:0%"></div></div>
+  </div>
+
+  <!-- BLOCO 1: Sobre o projeto -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(74,160,85,0.12);">📋</div>
+      <div>
+        <div class="section-title">Bloco 1 — Sobre o projeto</div>
+      </div>
+      <span class="section-count" id="count-1">0/6</span>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Me explica seu projeto com suas próprias palavras. O que você propôs e qual problema ele resolve?</div>
+        <div class="question-tip">👁 Observe: fluidez, segurança e detalhes espontâneos. Quem conhece o projeto fala sem hesitar.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Por que você escolheu esse segmento específico e não os outros?</div>
+        <div class="question-tip">👁 Respostas vagas como "achei mais fácil" ou "vi na internet" são sinal de pouco comprometimento.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Qual foi a parte mais difícil de documentar o projeto? Como você resolveu?</div>
+        <div class="question-tip">👁 Quem realmente pensou no projeto vai citar dificuldades concretas.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Se você tivesse mais tempo, o que melhoraria no projeto?</div>
+        <div class="question-tip">👁 Revela consciência crítica. Quem copiou geralmente acha que está ótimo.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Quais materiais ou tecnologias você listou no projeto? Me fala sobre algum que você já usou ou estudou.</div>
+        <div class="question-tip">👁 Se não sabe explicar nem um dos itens que escreveu, é sinal de cópia ou GPT sem revisão.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="1">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Se alguém te pedisse para implementar a primeira etapa do seu projeto agora, por onde você começaria?</div>
+        <div class="question-tip">👁 Pergunta de aprofundamento. Não precisa saber tudo — mas precisa ter raciocínio.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+  </div>
+
+  <!-- BLOCO 2: Originalidade / GPT -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(240,192,96,0.12);">🤖</div>
+      <div>
+        <div class="section-title">Bloco 2 — Originalidade</div>
+      </div>
+      <span class="section-count" id="count-2">0/4</span>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="2">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Você usou alguma ferramenta de IA para ajudar a escrever o projeto? Como?</div>
+        <div class="question-tip">👁 Seja honesto na escuta. Usar IA como apoio é diferente de deixar a IA escrever tudo. O que vale é a consciência e o domínio do que está escrito.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="2">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Tem alguma palavra ou termo técnico no seu projeto que você pode me explicar com suas próprias palavras?</div>
+        <div class="question-tip">👁 Escolha um termo específico do projeto deles e peça a explicação. Quem escreveu sabendo explica. Quem copiou trava.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="2">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">O que te inspirou a escolher esse problema específico? Tem alguma experiência pessoal relacionada?</div>
+        <div class="question-tip">👁 Projetos originais geralmente têm uma história. Projetos de GPT não têm nenhuma.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="2">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Existe alguma solução parecida com a sua já no mercado? O que tornaria a sua diferente?</div>
+        <div class="question-tip">👁 Quem pesquisou e pensou responde bem. Quem só gerou texto fica em branco.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+  </div>
+
+  <!-- BLOCO 3: Interesse na área -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(74,160,85,0.12);">🌱</div>
+      <div>
+        <div class="section-title">Bloco 3 — Interesse na área</div>
+      </div>
+      <span class="section-count" id="count-3">0/4</span>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="3">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">O que te atraiu especificamente para automação e inteligência artificial aplicada ao agronegócio?</div>
+        <div class="question-tip">👁 Respostas genéricas como "tecnologia é o futuro" indicam interesse superficial. Procure algo pessoal.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="3">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Você acompanha alguma tecnologia, canal, projeto ou novidade da área por conta própria?</div>
+        <div class="question-tip">👁 Interesse genuíno se manifesta fora da sala de aula. Qualquer menção espontânea já é positiva.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="3">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Como você imagina contribuindo com o LAISA no dia a dia? O que espera aprender aqui?</div>
+        <div class="question-tip">👁 Verifique se a expectativa é realista e alinhada com o que o laboratório realmente faz.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="3">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Você tem disponibilidade para as atividades do laboratório? Como está sua rotina atualmente?</div>
+        <div class="question-tip">👁 Confirme a disponibilidade declarada na inscrição. Inconsistências merecem aprofundamento.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+  </div>
+
+  <!-- BLOCO 4: Sobre o candidato -->
+  <div class="section">
+    <div class="section-header">
+      <div class="section-icon" style="background:rgba(125,204,106,0.12);">👤</div>
+      <div>
+        <div class="section-title">Bloco 4 — Sobre o candidato</div>
+      </div>
+      <span class="section-count" id="count-4">0/4</span>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="4">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Me conta um pouco sobre você — trajetória, onde cresceu, o que te trouxe até a engenharia.</div>
+        <div class="question-tip">👁 Pergunta aberta. Observe conforto, autenticidade e clareza ao falar de si mesmo.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="4">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Você tem algum projeto, trabalho ou experiência — dentro ou fora da faculdade — que te orgulha?</div>
+        <div class="question-tip">👁 Revela iniciativa e capacidade de execução. Pode ser simples — o que importa é o entusiasmo.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="4">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Como você lida quando trava em algo difícil e não sabe como resolver?</div>
+        <div class="question-tip">👁 Resiliência e autonomia são essenciais. Procure exemplos concretos, não respostas ensaiadas.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+
+    <div class="question" onclick="toggle(this)" data-block="4">
+      <div class="check-box">✓</div>
+      <div class="question-body">
+        <div class="question-text">Tem alguma pergunta que você queira fazer sobre o laboratório ou sobre como vai funcionar a bolsa?</div>
+        <div class="question-tip">👁 Quem tem interesse genuíno geralmente tem perguntas. Ausência total pode indicar desinteresse ou timidez — considere o contexto.</div>
+      </div>
+      <div class="question-actions"><button class="btn-flag" onclick="flag(event,this)">⚑</button></div>
+    </div>
+  </div>
+
+  <!-- Observações -->
+  <div class="notes-section">
+    <div class="notes-label">📝 Observações da entrevista</div>
+    <textarea class="notes-textarea" id="observacoes" placeholder="Anote impressões, respostas marcantes, pontos de atenção..." oninput="updateSummary()"></textarea>
+  </div>
+
+  <!-- Veredicto -->
+  <div class="verdict-section">
+    <div class="verdict-label">⚖️ Veredicto desta entrevista</div>
+    <div class="verdict-btns">
+      <button class="verdict-btn v-aprovado" onclick="setVerdict('aprovado', this)">✅ Selecionar</button>
+      <button class="verdict-btn v-lista" onclick="setVerdict('lista', this)">⏳ Lista de espera</button>
+      <button class="verdict-btn v-reprovado" onclick="setVerdict('reprovado', this)">❌ Não selecionar</button>
+    </div>
+  </div>
+
+  <!-- Ações -->
+  <div class="actions-bar">
+    <button class="btn-action primary" onclick="gerarResumo()">📄 Gerar resumo</button>
+    <button class="btn-action" onclick="window.print()">🖨️ Imprimir</button>
+    <button class="btn-action" onclick="resetar()">↺ Limpar para próximo</button>
+  </div>
+
+  <div class="summary-box" id="summaryBox"></div>
+
+</div>
+
+<script>
+let verdict = null;
+const TOTAL = document.querySelectorAll('.question').length;
+
+function toggle(el) {
+  if (el.classList.contains('flagged')) return;
+  el.classList.toggle('checked');
+  el.querySelector('.check-box').textContent = el.classList.contains('checked') ? '✓' : '';
+  updateProgress();
+}
+
+function flag(e, btn) {
+  e.stopPropagation();
+  const q = btn.closest('.question');
+  if (q.classList.contains('checked')) q.classList.remove('checked');
+  q.classList.toggle('flagged');
+  q.querySelector('.check-box').textContent = q.classList.contains('flagged') ? '⚑' : '';
+  updateProgress();
+}
+
+function updateProgress() {
+  const checked = document.querySelectorAll('.question.checked, .question.flagged').length;
+  const pct = Math.round((checked / TOTAL) * 100);
+  document.getElementById('progressFill').style.width = pct + '%';
+  document.getElementById('progressPct').textContent = pct + '%';
+
+  // update block counts
+  for (let b = 1; b <= 4; b++) {
+    const qs = document.querySelectorAll('[data-block="'+b+'"]');
+    const done = [...qs].filter(q => q.classList.contains('checked') || q.classList.contains('flagged')).length;
+    document.getElementById('count-'+b).textContent = done + '/' + qs.length;
+  }
+}
+
+function setVerdict(v, btn) {
+  verdict = v;
+  document.querySelectorAll('.verdict-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+function gerarResumo() {
+  const nome = document.getElementById('candidatoNome').value || '(sem nome)';
+  const proto = document.getElementById('candidatoProto').value || '—';
+  const obs = document.getElementById('observacoes').value || '(sem observações)';
+  const checked = [...document.querySelectorAll('.question.checked')].map(q => '✓ ' + q.querySelector('.question-text').textContent.trim());
+  const flagged = [...document.querySelectorAll('.question.flagged')].map(q => '⚑ ' + q.querySelector('.question-text').textContent.trim());
+  const vText = { aprovado: '✅ SELECIONAR', lista: '⏳ LISTA DE ESPERA', reprovado: '❌ NÃO SELECIONAR' };
+
+  const box = document.getElementById('summaryBox');
+  box.style.display = 'block';
+  box.textContent =
+`━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ENTREVISTA — LAISA PROSEL 2026
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Candidato : ${nome}
+Protocolo : ${proto}
+Veredicto : ${vText[verdict] || '(não definido)'}
+
+PERGUNTAS ABORDADAS (${checked.length})
+${checked.join('\n') || '(nenhuma marcada)'}
+
+PONTOS DE ATENÇÃO (${flagged.length})
+${flagged.join('\n') || '(nenhum)'}
+
+OBSERVAÇÕES
+${obs}
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━`;
+  box.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function updateSummary() {
+  // live update if summary is open
+  if (document.getElementById('summaryBox').style.display === 'block') gerarResumo();
+}
+
+function resetar() {
+  if (!confirm('Limpar tudo para o próximo candidato?')) return;
+  document.querySelectorAll('.question').forEach(q => {
+    q.classList.remove('checked','flagged');
+    q.querySelector('.check-box').textContent = '✓';
+  });
+  document.getElementById('candidatoNome').value = '';
+  document.getElementById('candidatoProto').value = '';
+  document.getElementById('observacoes').value = '';
+  document.querySelectorAll('.verdict-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('summaryBox').style.display = 'none';
+  verdict = null;
+  updateProgress();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+updateProgress();
+</script>
+</body>
+</html>
